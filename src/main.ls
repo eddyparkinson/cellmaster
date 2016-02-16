@@ -74,7 +74,7 @@
     @response.redirect if KEY then "#BASEPATH/=#room/edit" else "#BASEPATH/=#room"
   @get '/_new': ->
     room = new-room!
-    @response.redirect if KEY then "#BASEPATH/#room/edit" else "#BASEPATH/#room"
+    @response.redirect if KEY then "#BASEPATH/#room/appeditor" else "#BASEPATH/#room/appeditor"
   @get '/_start': sendFile \start.html
 
   IO = @io
@@ -263,7 +263,7 @@
   @get '/_/:room': api -> [Text, it]
 
   request-to-command = (request, cb) ->
-    #console.log "request-to-command"
+    #console.log "request-to-command" 
     if request.is \application/json
       command = request.body?command
       return cb command if command
@@ -341,6 +341,8 @@
     unless command
       @response.type Text
       return @response.send 400 'Please send command'
+    #command = 'submitform \r12/01/2016\rjim\rhere'
+    #console.log "Command: #command"
     {log, snapshot} <~ SC._get room, IO
     if command is /^loadclipboard\s*/
       row = 1
