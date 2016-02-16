@@ -53,8 +53,8 @@
   new-room = -> require \uuid-pure .newId 12 36 .toLowerCase!
 
   @get '/': sendFile \index.html
-  @get '/favicon.ico': -> @response.send 404 ''
-  #@get '/favicon.ico': sendFile \favicon.ico  #return site icon
+  #@get '/favicon.ico': -> @response.send 404 ''
+  @get '/favicon.ico': sendFile \favicon.ico  #return site icon
   @get '/manifest.appcache': ->
     @response.type \text/cache-manifest
     if DevMode
