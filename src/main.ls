@@ -74,6 +74,9 @@
     @response.redirect if KEY then "#BASEPATH/=#room/edit" else "#BASEPATH/=#room"
   @get '/_new': ->
     room = new-room!
+    @response.redirect if KEY then "#BASEPATH/#room/edit" else "#BASEPATH/#room/edit"
+  @get '/_newapp': ->
+    room = new-room!
     @response.redirect if KEY then "#BASEPATH/#room/appeditor" else "#BASEPATH/#room/appeditor"
   @get '/_start': sendFile \start.html
 

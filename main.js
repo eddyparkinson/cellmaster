@@ -101,6 +101,15 @@
         var room;
         room = newRoom();
         return this.response.redirect(KEY
+          ? BASEPATH + "/" + room + "/edit"
+          : BASEPATH + "/" + room + "/edit");
+      }
+    });
+    this.get({
+      '/_newapp': function(){
+        var room;
+        room = newRoom();
+        return this.response.redirect(KEY
           ? BASEPATH + "/" + room + "/appeditor"
           : BASEPATH + "/" + room + "/appeditor");
       }
