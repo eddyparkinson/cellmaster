@@ -232,6 +232,9 @@
                 }
                 break;
               case 'ask.ecell':
+                if (SocialCalc._app) {
+                  break;
+                }
                 SocialCalc.Callbacks.broadcast('ecell', {
                   to: this.data.user,
                   ecell: editor.ecell.coord

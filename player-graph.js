@@ -89,10 +89,12 @@
           DoGraph(false, false);
         };
         window.DoGraph = DoGraph = function(helpflag, isResize){
-          var colorIndex, spreadsheet, editor, gview, ginfo, gfunc, grange, nrange, rparts, prange, range;
+          var colorIndex, spreadsheet, gview, ginfo, gfunc, grange, nrange, rparts, prange, range;
           colorIndex = 0;
           spreadsheet = SocialCalc.GetSpreadsheetControlObject();
-          editor = spreadsheet.editor;
+          if (spreadsheet == null) {
+            return;
+          }
           gview = spreadsheet.views.graph.element;
           ginfo = SocialCalc.GraphTypesInfo[spreadsheet.graphtype];
           gfunc = ginfo.func;
