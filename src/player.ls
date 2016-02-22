@@ -56,7 +56,6 @@
       showError 'Disconnected from server. please check network connection and refresh.'
 
     @connect('http://stage-cellmaster.rhcloud.com:8000/', options)?io
-    @connect('http://stage-cellmaster.rhcloud.com/', options)?io
       ..?on \reconnect ->
         return unless SocialCalc?isConnected
         SocialCalc.Callbacks.broadcast \ask.log
