@@ -12,7 +12,8 @@ This work is published from Taiwan.
 slurp = -> require \fs .readFileSync it, \utf8
 argv = (try require \optimist .boolean <[ vm polling cors ]> .argv) || {}
 json = try JSON.parse slurp \/home/dotcloud/environment.json
-port = Number(argv.port or process.env.OPENSHIFT_INTERNAL_PORT or json?PORT_NODEJS or process.env.PORT or process.env.VCAP_APP_PORT or process.env.OPENSHIFT_NODEJS_PORT) or 8000
+port = Number(argv.port or json?PORT_NODEJS or process.env.PORT or process.env.VCAP_APP_PORT or process.env.OPENSHIFT_NODEJS_PORT) or 8000
+port = 80
 host = argv.host or process.env.VCAP_APP_HOST or process.env.OPENSHIFT_NODEJS_IP or \0.0.0.0
 basepath = (argv.basepath or "") - //  /$  //
 
