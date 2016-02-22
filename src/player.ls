@@ -43,7 +43,7 @@
       window.location = './_start'
       return
 
-    options = { 'connect timeout': 1500ms, +reconnect, 'reconnection delay': 500ms, 'max reconnection attempts': 1800 }
+    options = { 'connect timeout': 1500ms, +reconnect, 'reconnection delay': 500ms, 'max reconnection attempts': 1800, 'port':8000 }
     options.path = endpoint.replace(// /?$ // \/socket.io) if endpoint
     showError = ->
       vex?closeAll!

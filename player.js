@@ -69,7 +69,8 @@
             'connect timeout': 1500,
             reconnect: true,
             'reconnection delay': 500,
-            'max reconnection attempts': 1800
+            'max reconnection attempts': 1800,
+            'port': 8000
           };
           if (endpoint) {
             options.path = endpoint.replace(/\/?$/, '/socket.io');
