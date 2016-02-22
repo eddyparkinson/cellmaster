@@ -69,8 +69,7 @@
             'connect timeout': 1500,
             reconnect: true,
             'reconnection delay': 500,
-            'max reconnection attempts': 1800,
-            'port': 8000
+            'max reconnection attempts': 1800
           };
           if (endpoint) {
             options.path = endpoint.replace(/\/?$/, '/socket.io');
@@ -90,7 +89,7 @@
           window.addEventListener('offline', function(){
             return showError('Disconnected from server. please check network connection and refresh.');
           });
-          x$ = (ref3$ = this$.connect('/', options)) != null ? ref3$.io : void 8;
+          x$ = (ref3$ = this$.connect('http://stage-cellmaster.rhcloud.com/', options)) != null ? ref3$.io : void 8;
           if (x$ != null) {
             x$.on('reconnect', function(){
               if (!((typeof SocialCalc != 'undefined' && SocialCalc !== null) && SocialCalc.isConnected)) {
