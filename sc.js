@@ -734,6 +734,7 @@
           x.onmessage = function(arg$){
             var data;
             data = arg$.data;
+            console.log("EVAL isThreaded: " + data);
             x.thread.destroy();
             return cb(data);
           };

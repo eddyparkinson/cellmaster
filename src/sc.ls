@@ -343,7 +343,9 @@ Worker ||= class => (code) ->
         else
           post-message eval code
       catch e => post-message "ERROR: #{ e }"
-      x.onmessage = ({data}) -> x.thread.destroy!; cb data
+      x.onmessage = ({data}) -> do
+        console.log "EVAL isThreaded: #data"
+        x.thread.destroy!; cb data
       (, log) <~ DB.lrange "log-#room" 0 -1
       x.thread.eval bootSC, -> x.post-message {snapshot: w._snapshot, log, code}
     w.exportSave = (cb) -> w._eval "window.ss.CreateSheetSave()", cb
