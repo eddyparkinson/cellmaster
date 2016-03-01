@@ -34,18 +34,18 @@ bootSC += """;(#{->
 ##################################
 ### WebWorker Threads Fallback ###
 ##################################
-#IsThreaded = true
-#Worker = try
-#  throw \vm if argv.vm
-#  if parseInt(process.versions.node.slice(2)) > 10 or parseInt(process.versions.node[0])
-#    console.log "Note: Threading with Node #{ process.versions.node } is work in progress.\n=>> https://github.com/audreyt/node-webworker-threads/issues/48"
-#    throw \too-new
-#  console.log "Starting backend using webworker-threads"
-#  (require \webworker-threads).Worker
-#catch
-#  console.log "Falling back to vm.CreateContext backend"
-#  IsThreaded = false
-IsThreaded = false
+IsThreaded = true
+Worker = try
+  throw \vm if argv.vm
+  if parseInt(process.versions.node.slice(2)) > 10 or parseInt(process.versions.node[0])
+    console.log "Note: Threading with Node #{ process.versions.node } is work in progress.\n=>> https://github.com/audreyt/node-webworker-threads/issues/48"
+    throw \too-new
+  console.log "Starting backend using webworker-threads"
+  (require \webworker-threads).Worker
+catch
+  console.log "Falling back to vm.CreateContext backend"
+  IsThreaded = false
+#IsThreaded = false
 
 Worker ||= class => (code) ->
   cxt = { console, self: { onmessage: -> }, alert: -> }
@@ -356,7 +356,7 @@ Worker ||= class => (code) ->
     # eddy exportAttribs, triggerActionCell {
     w.exportAttribs = (cb) -> w._eval "window.ss.sheet.attribs", cb    
     w.triggerActionCell = (coord, cb) -> w._eval "window.ss.SocialCalc.TriggerIoAction.Email('#coord')" (emailcmd) ->
-      #console.log "send via OAuth"
+      console.log "process emailcmd: #emailcmd"
       for nextEmail in emailcmd
         nextEmail = for addSpaces in nextEmail #replace %20 with spaces
           addSpaces.replace(/%20/g,' ')
