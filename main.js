@@ -256,10 +256,17 @@
       '/_timetrigger': function(){
         var this$ = this;
         return DB.hgetall("cron-list", function(arg$, allTimeTriggers){
-          var timeNowMins, nextTriggerTime, cellID, timeList, res$, i$, ref$, len$, triggerTimeMins, ref1$, room, cell;
+          var timeNowMins, nextTriggerTime, ref$, room, cell, cellID, timeList, res$, i$, len$, triggerTimeMins, ref1$;
           console.log("allTimeTriggers ", (import$({}, allTimeTriggers)));
           timeNowMins = Math.floor(new Date().getTime() / (1000 * 60));
           nextTriggerTime = 2147483647;
+          console.log("-- send examples!B9");
+          ref$ = "examples!B9".split('!'), room = ref$[0], cell = ref$[1];
+          SC._get(room, IO, function(arg$){
+            var snapshot;
+            snapshot = arg$.snapshot;
+            return SC[room].triggerActionCell(cell, function(){});
+          });
           for (cellID in allTimeTriggers) {
             timeList = allTimeTriggers[cellID];
             res$ = [];

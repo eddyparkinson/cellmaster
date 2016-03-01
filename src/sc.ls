@@ -355,13 +355,15 @@ Worker ||= class => (code) ->
     w.exportCells = (cb) -> w._eval "JSON.stringify(window.ss.sheet.cells)", cb
     # eddy exportAttribs, triggerActionCell {
     w.exportAttribs = (cb) -> w._eval "window.ss.sheet.attribs", cb    
-    w.triggerActionCell = (coord, cb) -> w._eval "window.ss.SocialCalc.TriggerIoAction.Email('#coord')" (emailcmd) ->
-      console.log "process emailcmd: #emailcmd"
-      for nextEmail in emailcmd
-        nextEmail = for addSpaces in nextEmail #replace %20 with spaces
-          addSpaces.replace(/%20/g,' ')
-        [emailto, subject, body] = nextEmail
-        emailer.sendemail emailto, subject, body,  (message) ->
+    w.triggerActionCell = (coord, cb) -> do
+      console.log "process coord: #coord"
+      w._eval "window.ss.SocialCalc.TriggerIoAction.Email('#coord')" (emailcmd) ->
+        console.log "process emailcmd: #emailcmd"
+        for nextEmail in emailcmd
+          nextEmail = for addSpaces in nextEmail #replace %20 with spaces
+            addSpaces.replace(/%20/g,' ')
+          [emailto, subject, body] = nextEmail
+          emailer.sendemail emailto, subject, body,  (message) ->
       cb emailcmd
     #w.debug = (coord, cb) -> w._eval "window.ss.sheet.ioParameterList", cb
     # }
