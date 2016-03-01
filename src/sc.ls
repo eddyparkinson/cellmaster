@@ -364,7 +364,7 @@ Worker ||= class => (code) ->
             addSpaces.replace(/%20/g,' ')
           [emailto, subject, body] = nextEmail
           emailer.sendemail emailto, subject, body,  (message) ->
-      cb emailcmd
+        cb emailcmd
     #w.debug = (coord, cb) -> w._eval "window.ss.sheet.ioParameterList", cb
     # }
     w.thread.eval bootSC, ~> w.postMessage { type: \init, room, log, snapshot }

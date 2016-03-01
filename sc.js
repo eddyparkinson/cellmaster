@@ -768,8 +768,8 @@
       };
       w.triggerActionCell = function(coord, cb){
         console.log("process coord: " + coord);
-        w._eval("window.ss.SocialCalc.TriggerIoAction.Email('" + coord + "')", function(emailcmd){
-          var i$, len$, nextEmail, res$, j$, len1$, addSpaces, emailto, subject, body, results$ = [];
+        return w._eval("window.ss.SocialCalc.TriggerIoAction.Email('" + coord + "')", function(emailcmd){
+          var i$, len$, nextEmail, res$, j$, len1$, addSpaces, emailto, subject, body;
           console.log("process emailcmd: " + emailcmd);
           for (i$ = 0, len$ = emailcmd.length; i$ < len$; ++i$) {
             nextEmail = emailcmd[i$];
@@ -780,12 +780,11 @@
             }
             nextEmail = res$;
             emailto = nextEmail[0], subject = nextEmail[1], body = nextEmail[2];
-            results$.push(emailer.sendemail(emailto, subject, body, fn$));
+            emailer.sendemail(emailto, subject, body, fn$);
           }
-          return results$;
+          return cb(emailcmd);
           function fn$(message){}
         });
-        return cb(emailcmd);
       };
       w.thread.eval(bootSC, function(){
         return w.postMessage({
