@@ -165,13 +165,6 @@
       console.log "allTimeTriggers "  {...allTimeTriggers}
       timeNowMins = Math.floor(new Date().getTime() / (1000 * 60))
       nextTriggerTime = 2147483647   # set to max seconds possible (31^2)      
-      #
-      console.log "-- send examples!B9"
-      [room, cell] = "examples!B9".split('!') 
-      do
-        {snapshot} <~ SC._get room, IO
-        SC[room].triggerActionCell cell, ->                
-      #
       for cellID, timeList of allTimeTriggers
         timeList = for triggerTimeMins in timeList.split(',')
           if triggerTimeMins <= timeNowMins
