@@ -474,7 +474,7 @@ SocialCalc.Constants = {
    s_loc_default_padding: "Default Padding",
    s_loc_delete: "Delete",
    s_loc_delete_column: "Delete Column",
-   s_loc_delete_contents: "Delete Contents",
+   s_loc_delete_contents: "Delete Cell Contents",
    s_loc_delete_row: "Delete Row",
    s_loc_description: "Description",
    s_loc_display_clipboard_in: "Display Clipboard in",
@@ -491,9 +491,11 @@ SocialCalc.Constants = {
    s_loc_functions: "Functions",
    s_loc_grid: "Grid",
    s_loc_hidden: "Hidden",
+   s_loc_hide_column: "Hide Column",
+   s_loc_hide_row: "Hide Row",
    s_loc_horizontal: "Horizontal",
-   s_loc_insert_column: "Insert Column",
-   s_loc_insert_row: "Insert Row",
+   s_loc_insert_column: "Insert Column Before",
+   s_loc_insert_row: "Insert Row Before",
    s_loc_italic: "Italic",
    s_loc_last_sort: "Last Sort",
    s_loc_left: "Left",
@@ -502,9 +504,10 @@ SocialCalc.Constants = {
    s_loc_link_input_box: "Link Input Box",
    s_loc_list: "List",
    s_loc_load_socialcalc_clipboard_with_this: "Load SocialCalc Clipboard With This",
+   s_loc_lock_cell: "Lock Cell",
    s_loc_major_sort: "Major Sort",
    s_loc_manual: "Manual",
-   s_loc_merge_cells: "Merge Cells",
+   s_loc_merge_cells: "Merge/Unmerge Cells",
    s_loc_middle: "Middle",
    s_loc_minor_sort: "Minor Sort",
    s_loc_move_insert: "Move Insert",
@@ -553,6 +556,7 @@ SocialCalc.Constants = {
    s_loc_undone_steps: "UNDONE STEPS",
    s_loc_url: "URL",
    s_loc_undo: "Undo",
+   s_loc_unlock_cell: "Unlock Cell",
    s_loc_unmerge_cells: "Unmerge Cells",
    s_loc_up: "Up",
    s_loc_value: "Value",
@@ -8116,24 +8120,28 @@ SocialCalc.EditorSheetStatusCallback = function(recalcdata, status, arg, editor)
 
          // Handle hidden column.
          if (sheetobj.hiddencolrow == "col") {
-            var col = editor.ecell.col;
-            while (sheetobj.colattribs.hide[SocialCalc.rcColname(col)] == "yes") {
-               col++;
+            if (editor.ecell !== null) {
+               var col = editor.ecell.col;
+               while (sheetobj.colattribs.hide[SocialCalc.rcColname(col)] == "yes") {
+                  col++;
+                  }
+               var coord = SocialCalc.crToCoord(col, editor.ecell.row);
+               editor.MoveECell(coord);
+               sheetobj.hiddencolrow = "";
                }
-            var coord = SocialCalc.crToCoord(col, editor.ecell.row);
-            editor.MoveECell(coord);
-            sheetobj.hiddencolrow = "";
             }
 
          // Handle hidden row.
          if (sheetobj.hiddencolrow == "row") {
-            var row = editor.ecell.row;
-            while (sheetobj.rowattribs.hide[row] == "yes") {
-               row++;
+            if (editor.ecell !== null) {
+               var row = editor.ecell.row;
+               while (sheetobj.rowattribs.hide[row] == "yes") {
+                  row++;
+                  }
+               var coord = SocialCalc.crToCoord(editor.ecell.col, row);
+               editor.MoveECell(coord);
+               sheetobj.hiddencolrow = "";
                }
-            var coord = SocialCalc.crToCoord(editor.ecell.col, row);
-            editor.MoveECell(coord);
-            sheetobj.hiddencolrow = "";
             }
 
          return;
@@ -10069,12 +10077,14 @@ SocialCalc.SetECellHeaders = function(editor, selected) {
       first = context.rowpanes[rowpane].first;
       last = context.rowpanes[rowpane].last;
       if (ecell.row >= first && ecell.row <= last) {
-         headercell = editor.fullgrid.childNodes[1].childNodes[2+rowindex+ecell.row-first].childNodes[0];
-         if (headercell) {
-            if (context.classnames) headercell.className=context.classnames[selected+"rowname"];
-            if (context.explicitStyles) headercell.style.cssText=context.explicitStyles[selected+"rowname"];
-            headercell.style.verticalAlign="top"; // to get around Safari making top of centered row number be
-                                                  // considered top of row (and can't get <row> position in Safari)
+         if (editor.fullgrid !== null) {
+            headercell = editor.fullgrid.childNodes[1].childNodes[2+rowindex+ecell.row-first].childNodes[0];
+            if (headercell) {
+               if (context.classnames) headercell.className=context.classnames[selected+"rowname"];
+               if (context.explicitStyles) headercell.style.cssText=context.explicitStyles[selected+"rowname"];
+               headercell.style.verticalAlign="top"; // to get around Safari making top of centered row number be
+                                                     // considered top of row (and can't get <row> position in Safari)
+               }
             }
          }
       rowindex += last - first + 1 + 1;
@@ -10084,10 +10094,12 @@ SocialCalc.SetECellHeaders = function(editor, selected) {
       first = context.colpanes[colpane].first;
       last = context.colpanes[colpane].last;
       if (ecell.col >= first && ecell.col <= last) {
-         headercell = editor.fullgrid.childNodes[1].childNodes[1].childNodes[1+colindex+ecell.col-first];
-         if (headercell) {
-            if (context.classnames) headercell.className=context.classnames[selected+"colname"];
-            if (context.explicitStyles) headercell.style.cssText=context.explicitStyles[selected+"colname"];
+         if (editor.fullgrid !== null) {
+            headercell = editor.fullgrid.childNodes[1].childNodes[1].childNodes[1+colindex+ecell.col-first];
+            if (headercell) {
+               if (context.classnames) headercell.className=context.classnames[selected+"colname"];
+               if (context.explicitStyles) headercell.style.cssText=context.explicitStyles[selected+"colname"];
+               }
             }
          }
       colindex += last - first + 1 + 1;
