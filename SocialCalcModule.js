@@ -7471,14 +7471,22 @@ SocialCalc.TableEditor = function(context) {
                ta.blur();
                ta.style.display = "none";
                var cmd = "";
-               var clipstr = SocialCalc.ConvertSaveToOtherFormat(SocialCalc.Clipboard.clipboard, "tab");
-               value = value.replace(/\r\n/g, "\n");
-               // pastes SocialCalc clipboard if did a Ctrl-C and contents still the same
-               // Webkit adds an extra blank line, so need to allow for that
-               if (value != clipstr && (value.length-clipstr.length!=1 || value.substring(0,value.length-1)!=clipstr)) {
-                  cmd = "loadclipboard "+
-                  SocialCalc.encodeForSave(SocialCalc.ConvertOtherFormatToSave(value, "tab")) + "\n";
-                  }
+               if(editor.pastescclipboard) {
+                 // Clipboard loaded from "clipboard tab" - see  SpreadsheetControlClipboardLoad 
+                 // ignore windows clipboard contents
+                 editor.pastescclipboard = false;
+                 } 
+               else {
+                 // Use windows clipboard contents if value does not match last copy
+                 var clipstr = SocialCalc.ConvertSaveToOtherFormat(SocialCalc.Clipboard.clipboard, "tab");
+                 value = value.replace(/\r\n/g, "\n");
+                 // pastes SocialCalc clipboard if did a Ctrl-C and contents still the same
+                 // Webkit adds an extra blank line, so need to allow for that
+                 if (value != clipstr && (value.length-clipstr.length!=1 || value.substring(0,value.length-1)!=clipstr)) {
+                    cmd = "loadclipboard "+
+                    SocialCalc.encodeForSave(SocialCalc.ConvertOtherFormatToSave(value, "tab")) + "\n";
+                    }
+                 }
                var cr;
                if (editor.range.hasrange) {
                   var clipsheet = new SocialCalc.Sheet();
@@ -25362,6 +25370,8 @@ SocialCalc.SpreadsheetControlClipboardLoad = function() {
    else if (document.getElementById(s.idPrefix+"clipboardformat-scsave").checked) {
       savetype = "scsave";
       }
+   // control+v ignores ignore windows clipboard - see ctrlkeyFunction(editor, charname)
+   s.editor.pastescclipboard = true;
    s.editor.EditorScheduleSheetCommands("loadclipboard "+
       SocialCalc.encodeForSave(
          SocialCalc.ConvertOtherFormatToSave(document.getElementById(s.idPrefix+"clipboardtext").value, savetype)), true, false);
