@@ -630,8 +630,8 @@ SocialCalc.Formula.EvaluatePolish = function(parseinfo, revpolish, sheet, allowr
 
 	  
 	  // eddy EvaluatePolish { 
-        SocialCalc.DebugLog({ revpolish: revpolish});
-        SocialCalc.DebugLog({ revpolish: revpolish});
+    //    SocialCalc.DebugLog({ revpolish: revpolish});
+    //    SocialCalc.DebugLog({ revpolish: revpolish});
 	  // }
 
 	// eddy EvaluatePolish {
@@ -1876,7 +1876,7 @@ SocialCalc.Formula.CalculateFunction = function(fname, operand, sheet, coord) {
 
 		 
 	  
-      errortext = ffunc(fname, operand, foperand, sheet);
+      errortext = ffunc(fname, operand, foperand, sheet, coord);
       }
 
    else {
@@ -4883,17 +4883,21 @@ SocialCalc.Formula.FunctionList["IRR"] = [SocialCalc.Formula.IRRFunction, -1, "i
 # IMAGEBUTTON(string) 
 # TEXTBOX(string) // 
 # AUTOCOMPLETE(string, range)
+# SELECT(string, range [,size [,multiple]])
 # CHECKBOX(string) // 
 # RADIOBUTTON(string,groupname)
 # COPYVALUE(range, destinationCell, value_or_range) // 
 # COPYFORMULA(range, destinationCell, formula_range)) // 
-# INSERT(trigger_cell, destination_range [,formula_range,value_range,formula_range, ...]) // 
-# DELETEIF(trigger_cell, criteria , test_range) // 
+# INSERT(trigger_cell, destination_range [,formula_range,value_range,formula_range, ...])
+# DELETEIF(trigger_cell, criteria , test_range) 
+# COMMAND(trigger_cell, commands)
+# COMMANDIF(trigger_cell, condition, commands) 
+# PANEL(indices_or_csv, panel1_range [, panel2_range , ...])  
 #
 */
 
 
-SocialCalc.Formula.IoFunctions = function(fname, operand, foperand, sheet) {
+SocialCalc.Formula.IoFunctions = function(fname, operand, foperand, sheet, coord) {
 
   
 // ArgList has an array for each function, one entry for each possible arg (up to max).
@@ -4930,12 +4934,16 @@ SocialCalc.Formula.IoFunctions = function(fname, operand, foperand, sheet) {
         ,SUBMIT: [2]
         ,TEXTBOX: [2]
         ,AUTOCOMPLETE: [2, 14]
+        ,SELECT: [2, 14, 1, 1]   // # SELECT(string, range [,size [,multiple]])
         ,CHECKBOX: [3]
         ,RADIOBUTTON: [2, 2]
 				,COPYVALUE: [4, 12, 15]
 				,COPYFORMULA: [4, 12, 12]
         ,INSERT: [4, 8, -12, -15]  // change code to allow unlimited 
         ,DELETEIF: [4,7,8]
+        ,COMMAND: [4, 14]
+        ,COMMANDIF: [4, 13, 14]
+        ,PANEL:[15, -12] // # PANEL(indices_or_csv, panel1_range [, panel2_range , ...])  
    };
    
    var i, parameter, offset, len, start, count;
@@ -5037,16 +5045,31 @@ SocialCalc.Formula.IoFunctions = function(fname, operand, foperand, sheet) {
       }
    }
 
-
+   
    switch (fname) {
+     case "SELECT":  // # SELECT(string, range [,size [,multiple]])
+         var parameters = sheet.ioParameterList[coord];
+         var optionSource = SocialCalc.Formula.getStandardizedList(sheet, parameters[1]);
+         
+         parameters.html = [];        
+         parameters.html[0] = (operand_value[4] == true) ? "multiple" : ""
+         parameters.html[1] = (operand_value[3]) ? ""+operand_value[3] : "1"
+         if(optionSource.length > 0 ) {
+           var options = "<option>" + optionSource.join("</option><option>") + "</option>";
+           var optionRegExp = new RegExp("<option>"+operand_value[1],'');
+           parameters.html[2] = options.replace(optionRegExp, "<option selected>"+operand_value[1] ); // select default, if any
+         }
+         result = operand_value[1];
+         resulttype = "ti"+fname;
+         break;
      case "SUBMIT":
-         result = "Submit";
+       result = "Submit";
      case "BUTTON":
      case "IMAGEBUTTON":
      case "TEXTBOX":
      case "AUTOCOMPLETE":
          if (numargs>0) result = operand_value[1];
-         resulttype = "ti"+fname; // (t)ext value with (i)nterface (BUTTON,IMAGEBUTTON,TEXTBOX,AUTOCOMPLETE) 
+         resulttype = "ti"+fname; // (t)ext value with (i)nterface (BUTTON,IMAGEBUTTON,TEXTBOX,AUTOCOMPLETE, SELECT) 
          break;
 
       case "EMAIL":
@@ -5083,6 +5106,8 @@ SocialCalc.Formula.IoFunctions = function(fname, operand, foperand, sheet) {
       case "COPYFORMULA":
       case "INSERT":
       case "DELETEIF":
+      case "COMMAND":
+      case "COMMANDIF":
          var cell = sheet.cells[operand_value[1]];
          if(typeof cell === 'undefined') break; // invalid trigger cell, return error
          result = cell.datavalue; // get trigger cell value
@@ -5091,6 +5116,83 @@ SocialCalc.Formula.IoFunctions = function(fname, operand, foperand, sheet) {
          result = result[result.length-1]; 
          resulttype = "t";
          break;
+      case "PANEL":
+        //  - code to show/hide panel
+        //  --- get list of panels to show - "showindex_or_csv" 
+        //  --- get param details 
+        var showindices = SocialCalc.Formula.getStandardizedList(sheet, {value: operand_value[1], type: operand_type[1]});
+        
+        //  --- SET list of showrows TO empty
+        //  --- SET list of showcols TO empty
+        result = "Panels:"+ showindices; 
+        resulttype = "t";
+        if(SocialCalc._app) { // panel only works in live app
+          var showrows = [], showcols = [];
+          //  --- FOR each panel to show
+          for (var parameterIndex = 2; parameterIndex < operand_value.length; ++parameterIndex) { 
+            // show panel if its index is in the showindices list 
+            var showPanelFound = false;
+            for(var showIndex in showindices ) { 
+              if (showindices[showIndex] == parameterIndex-1) {
+                showPanelFound = true;
+                break;
+              }
+            }
+            if(showPanelFound === false) continue;
+            
+          
+            //  ----- get panel range rows & cols only
+            var panelCoordData = SocialCalc.Formula.getStandardizedCoords(sheet, {value: operand_value[parameterIndex], type: operand_type[parameterIndex]});
+            //  ----- FOR each row/col -- create function to do the loop
+            for (var i=0; i<panelCoordData.ncols; i++) {
+              //  ------- set showrows/col row/col to true
+              showcols[panelCoordData.col1num + i] = true;
+            }  //  ----- END FOR                        
+            for (var j=0; j<panelCoordData.nrows; j++) {
+              //  ------- set showrows/col row/col to true
+              showrows[panelCoordData.row1num + j] = true;
+            }
+          }   //  --- END FOR
+          
+          var showGridDimension =  function(sheet, lastIndex, sheetHideList, showList, getIndexOf) {
+            var forceRender = false;
+            //  --- hide all rows/col    up to sheet.attribs.lastrow/col         
+            //  --- FOR each row/col -- create function to do the loop          
+            for(var arrayIndex = 1; arrayIndex <= lastIndex; arrayIndex ++ ) { // start at col/row 1
+              //  ----- IF row hide/show state need updating
+              var sheetHideIndex = getIndexOf(arrayIndex); // gets col name if col
+              if(typeof sheetHideList[sheetHideIndex] == 'undefined') { 
+                // row/col is visible
+                if(showList[arrayIndex] !== true) { // if hide
+                  //  ------- SET the row state  
+                  sheetHideList[sheetHideIndex] ="yes";                
+                  //  ------- SET repaint flag
+                  forceRender = true;
+                }
+              } else {
+                // row/col is hidden 
+                if(showList[arrayIndex] === true) { // if show 
+                  //  ------- SET the row state  
+                  delete sheetHideList[sheetHideIndex];                
+                  //  ------- SET repaint flag
+                  forceRender = true;
+                }
+              }              
+              
+            }
+            if(forceRender) {
+              sheet.renderneeded = true;
+              sheet.widgetsClean = false; //  force widgets to repaint - update cell reference in widget HTML                   
+            }
+            
+          };
+
+          
+          var getRowIndex = function(row) { return row };
+          showGridDimension(sheet,  sheet.attribs.lastrow,  sheet.rowattribs.hide, showrows, getRowIndex);
+          showGridDimension(sheet,  sheet.attribs.lastcol,  sheet.colattribs.hide, showcols, SocialCalc.rcColname );
+          
+        }
          
       }
 
@@ -5118,6 +5220,7 @@ SocialCalc.Formula.FunctionList["EMAILATIF"] = [SocialCalc.Formula.IoFunctions, 
 SocialCalc.Formula.FunctionList["SUBMIT"] = [SocialCalc.Formula.IoFunctions, 100, "[label]", "", "action", "<button type='button' onclick=\"SocialCalc.TriggerIoAction.Submit('<%=cell_reference%>');\"><%=formated_value%></button>", "ParameterList" ];
 SocialCalc.Formula.FunctionList["TEXTBOX"] = [SocialCalc.Formula.IoFunctions, 1, "value", "", "gui", "<input type='text' id='TEXTBOX_<%=cell_reference%>' onblur='SocialCalc.CmdGotFocus(null);' oninput=\"SocialCalc.TriggerIoAction.TextBox('<%=cell_reference%>')\" value='<%=display_value%>' >", "Input" ];
 SocialCalc.Formula.FunctionList["AUTOCOMPLETE"] = [SocialCalc.Formula.IoFunctions, 2, "value, range or csv_text", "", "gui", "<input type='text' id='AUTOCOMPLETE_<%=cell_reference%>' onfocus=\"SocialCalc.TriggerIoAction.AddAutocomplete('<%=cell_reference%>');\" onblur='SocialCalc.CmdGotFocus(null);' value='<%=display_value%>' >", "Input" ];
+SocialCalc.Formula.FunctionList["SELECT"] = [SocialCalc.Formula.IoFunctions, -2, "value, range or csv_text [,size]", "", "gui", "<select size='<%=html1_value%>' id='SELECT_<%=cell_reference%>' onchange=\"SocialCalc.TriggerIoAction.SelectList('<%=cell_reference%>')\" <%=html0_value%>><%=html2_value%></select>", "Input" ];
 SocialCalc.Formula.FunctionList["CHECKBOX"] = [SocialCalc.Formula.IoFunctions, 1, "value", "", "gui", "<input type='checkbox' id='CHECKBOX_<%=cell_reference%>' <%=checked%> onblur='SocialCalc.CmdGotFocus(null);' onchange=\"SocialCalc.TriggerIoAction.CheckBox('<%=cell_reference%>')\" >", "Input" ];
 SocialCalc.Formula.FunctionList["RADIOBUTTON"] = [SocialCalc.Formula.IoFunctions, 2, "value, groupname", "", "gui", "<input type='radio' value='<%=cell_reference%>' id='RADIOBUTTON_<%=cell_reference%>' <%=checked%> name='<%=parameter1_value%>' onblur=\"SocialCalc.CmdGotFocus(null);\" onclick=\"SocialCalc.TriggerIoAction.RadioButton('<%=parameter1_value%>');\" >", "Input" ];
 
@@ -5125,8 +5228,10 @@ SocialCalc.Formula.FunctionList["COPYVALUE"] = [SocialCalc.Formula.IoFunctions, 
 SocialCalc.Formula.FunctionList["COPYFORMULA"] = [SocialCalc.Formula.IoFunctions, 3, "trigger_cell, destinationCell, formula_range", "", "action", "", "EventTree"];
 SocialCalc.Formula.FunctionList["INSERT"] = [SocialCalc.Formula.IoFunctions, -2, "trigger_cell, destination_range [,formula_range,value_or_range,formula_range, ...]", "", "action", "", "EventTree"];
 SocialCalc.Formula.FunctionList["DELETEIF"] = [SocialCalc.Formula.IoFunctions, -1, "trigger_cell, criteria , test_range", "", "action", "", "EventTree"];
+SocialCalc.Formula.FunctionList["COMMAND"] = [SocialCalc.Formula.IoFunctions, -1, "trigger_cell, commands", "", "action", "", "EventTree"];
+SocialCalc.Formula.FunctionList["COMMANDIF"] = [SocialCalc.Formula.IoFunctions, -1, "trigger_cell, conditions, commands", "", "action", "", "EventTree"];
 
-
+SocialCalc.Formula.FunctionList["PANEL"] = [SocialCalc.Formula.IoFunctions, -1, "showindices_range_or_csv, panel1_range [, panel2_range , ...]", "", "action", "", "EventTree"];
 
 // on enter input box refresh the auto complete list
 SocialCalc.TriggerIoAction.AddAutocomplete = function(triggerCellId) {
@@ -5138,19 +5243,7 @@ SocialCalc.TriggerIoAction.AddAutocomplete = function(triggerCellId) {
   var parameters = sheet.ioParameterList[triggerCellId];
   if(typeof parameters === 'undefined') return;
   
-  var autocompleteSource = [];
-  var parameterdata = SocialCalc.Formula.getStandardizedValues(sheet, parameters[1]);
-  
-  if(parameterdata.ncols == 1 && parameterdata.nrows == 1) {
-    autocompleteSource = String(parameterdata.celldata[0][0].datavalue).split(',');
-  } else {
-    for (var i=0; i<parameterdata.ncols; i++) {
-      for (var j=0; j<parameterdata.nrows; j++) {
-         var cell = parameterdata.celldata[i][j];
-         autocompleteSource.push(cell.datavalue.toString());
-      }
-   }    
-  }
+  var autocompleteSource = SocialCalc.Formula.getStandardizedList(sheet, parameters[1])
 
   //Overrides the default autocomplete filter function to search only from the beginning of the string
   $.ui.autocomplete.filter = function (array, term) {
@@ -5194,6 +5287,7 @@ SocialCalc.TriggerIoAction.Button = function(triggerCellId) {
  for(var actionCellId in sheet.ioEventTree[triggerCellId]) {
  
 	var parameters = sheet.ioParameterList[actionCellId];
+	var conditionsParameter = null;
 	
 	switch(parameters.function_name) {
 	  
@@ -5297,7 +5391,39 @@ SocialCalc.TriggerIoAction.Button = function(triggerCellId) {
       if (sheetCommandList != "" ) spreadsheet.editor.EditorScheduleSheetCommands(sheetCommandList,  true, false);        
       
       break;
-    }
+    case "COMMANDIF" :  //    # COMMANDIF(trigger_cell, condition, commands) 
+      conditionsParameter = SocialCalc.Formula.getStandardizedValues(sheet, parameters[1]); // commands 
+
+      
+    case "COMMAND" :  // COMMAND(trigger_cell, commands) 
+      var commandsParameter;
+      // set command list to empty
+      var sheetCommandList = "";
+      if( conditionsParameter != null) {
+        var commandsParameter = SocialCalc.Formula.getStandardizedValues(sheet, parameters[2]); // commands 
+        if (conditionsParameter.ncols != commandsParameter.ncols || conditionsParameter.nrows != commandsParameter.nrows) break;
+      } else {
+        commandsParameter = SocialCalc.Formula.getStandardizedValues(sheet, parameters[1]); // commands         
+      }
+      
+      for (var i=0; i<commandsParameter.ncols; i++) {
+        for (var j=0; j<commandsParameter.nrows; j++) {
+
+          if( conditionsParameter != null) {
+            var conditionCell = conditionsParameter.celldata[i][j];
+            if(conditionCell.datavalue == false) continue;
+          }
+          if (sheetCommandList != "" ) sheetCommandList = sheetCommandList + "\n";
+          var cellCommand = commandsParameter.celldata[i][j];  
+          sheetCommandList = sheetCommandList + cellCommand.datavalue.toString().trim();
+          
+        }
+      }
+      if (sheetCommandList != "" ) spreadsheet.editor.EditorScheduleSheetCommands(sheetCommandList,  true, false);        
+
+      break;
+      
+  }
 
  } 
 
@@ -5582,6 +5708,13 @@ SocialCalc.TriggerIoAction.Submit = function(triggerCellId) {
   }
 }
 
+//onChange=select tag (combobox) 
+SocialCalc.TriggerIoAction.SelectList = function(selectListCellId) {
+  var getHTMLselectListCellValue = function( selectListWidget ) { return selectListWidget.value; };
+  var function_name = "SELECT";
+  SocialCalc.TriggerIoAction.updateInputWidgetFormula(function_name, selectListCellId, getHTMLselectListCellValue );
+}
+
 //onKeyUp=AutoComplete
 SocialCalc.TriggerIoAction.AutoComplete = function(autoCompleteCellId) {
   var getHTMLAutoCompleteCellValue = function( autoCompleteWidget ) { return autoCompleteWidget.value; };
@@ -5630,6 +5763,9 @@ SocialCalc.TriggerIoAction.updateInputWidgetFormula = function(function_name, wi
 
  var sheetCommand = 'set '+widgetCellId+ ' formula '+ function_name+'("' +inputValue+'"';
  for(var paramIndex = 1; paramIndex < parameters.length; paramIndex++) {
+   if(parameters[paramIndex].type.charAt(0) == 'n') {
+     sheetCommand += ',' + parameters[paramIndex].value;
+   }
    if(parameters[paramIndex].type.charAt(0) == 't') {
      sheetCommand += ',"' + parameters[paramIndex].value + '"';
    }
@@ -5685,6 +5821,29 @@ SocialCalc.Formula.getStandardizedCoords = function(sheet, parameterData) {
   return SocialCalc.Formula.getStandardizedParameter(sheet, parameterData, true, false);
 }  
 
+/***************
+ * getStandardizedList
+ * @sheet spreadsheet sheet
+ * @listParameter csv or array or single value - convert into single array
+ * @return array of values - one dimension
+ ****************/
+SocialCalc.Formula.getStandardizedList = function(sheet, listParameter) {
+  
+  var listValues = [];
+  var parameterdata = SocialCalc.Formula.getStandardizedValues(sheet, listParameter);
+  
+  if(parameterdata.ncols == 1 && parameterdata.nrows == 1) {
+    listValues = String(parameterdata.celldata[0][0].datavalue).split(',');
+  } else {
+    for (var i=0; i<parameterdata.ncols; i++) {
+      for (var j=0; j<parameterdata.nrows; j++) {
+         var cell = parameterdata.celldata[i][j];
+         listValues.push(cell.datavalue.toString());
+      }
+   }    
+  }
+  return listValues;
+}
 
 /**************************
  * getStandardizedParameter(parameterData, includeCellCoord, includeCellData)
