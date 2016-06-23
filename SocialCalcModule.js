@@ -6499,6 +6499,7 @@ SocialCalc.FormatValueForDisplay = function(sheetobj, value, cr, linkstyle) {
        // FOR each parameter
        var parameterValue; // set to value of param for if coord, value of cell
        if(parameters) { 
+         // add forumla parameters to widget html
          for(var index=0; index < parameters.length; index ++) {
            // IF coord THEN replace with cell value
            if(parameters[index].type == 'coord') {
@@ -6510,12 +6511,17 @@ SocialCalc.FormatValueForDisplay = function(sheetobj, value, cr, linkstyle) {
            var paramRegExp = new RegExp("<%=parameter"+index+"_value%>",'g');
            cell_html = cell_html.replace(paramRegExp, parameterValue);
          }
-         if(parameters.html) { 
+         if(parameters.html) { // add html created in formula1.js to widget
            for(var htmlIndex=0; htmlIndex < parameters.html.length; htmlIndex ++) {
              var paramRegExp = new RegExp("<%=html"+htmlIndex+"_value%>",'g');
              cell_html = cell_html.replace(paramRegExp, parameters.html[htmlIndex]);
            }
          }
+         if(parameters.css) { // add style(css) formula css value, if any - e.g. =textbox("")+style("margin: 8px 0;")
+           // * RegEx Unit Test **  https://regex101.com/r/oV7wU5/2
+           cell_html = cell_html.replace(/^(<\w+)(\W)/, "$1 style='"+parameters.css+ "'$2");
+         }
+
        }
        
 			 return cell_html.replace(/<%=cell_reference%>/g, cr);
@@ -10494,12 +10500,14 @@ SocialCalc.FitToEditTable = function(editor) {
    context.colpanes[colpane].last = context.sheetobj.attribs.usermaxcol || colnum;
 
    // Calculate row height data
-   // find first visable row
+   
+   // find first visible row
    var firstRow = context.rowpanes[0].first;
    var lastRow = context.sheetobj.attribs.lastrow;
    while(sheetobj.rowattribs.hide[firstRow] == "yes" && firstRow <lastRow) firstRow++;
    context.rowpanes[0].first = firstRow;
    
+   // count visible rows in pane(s)
    totalrows=context.showRCHeaders ? 1 : 0;
    for (rowpane=0; rowpane<context.rowpanes.length-1; rowpane++) { // count all panes but last one
       totalrows += context.rowpanes[rowpane].last - context.rowpanes[rowpane].first + 1;
@@ -15071,7 +15079,8 @@ SocialCalc.TriggerIoAction = {}; // eddy
                 'nl': '|n%:n|nd:n|nt:n|ndt:n|n$:n|n:n|n*:n|b:n|e*:2|t*:e#VALUE!|',
                 'n': '|n%:n|nd:nd|nt:nt|ndt:ndt|n$:n$|n:n|n*:n|b:n|e*:2|t*:e#VALUE!|',
                 'b': '|n%:n%|nd:nd|nt:nt|ndt:ndt|n$:n$|n:n|n*:n|b:n|e*:2|t*:e#VALUE!|',
-                't*': '|n*:e#VALUE!|t*:e#VALUE!|b:e#VALUE!|e*:2|',
+                't*': '|ni:1|n*:e#VALUE!|t*:e#VALUE!|b:e#VALUE!|e*:2|',
+                'n*': '|ni:1|e*:2|',
                 'e*': '|e*:1|n*:1|t*:1|b:1|'
                },
        concat: {
@@ -15752,13 +15761,18 @@ SocialCalc.Formula.EvaluatePolish = function(parseinfo, revpolish, sheet, allowr
                errortext = scc.s_parseerrmissingoperand; // remember error
                break;
                }
-            value2 = operand_as_number(sheet, operand);
-            value1 = operand_as_number(sheet, operand);
             if (ttext == '+') {
+               value2 = operand_value_and_type(sheet, operand);
+               value1 = operand_value_and_type(sheet, operand); // allow + to append style formula to widget
                resulttype = lookup_result_type(value1.type, value2.type, typelookup.plus);
                PushOperand(resulttype, value1.value + value2.value);
-               }
-            else if (ttext == '-') {
+               } 
+            else {
+              value2 = operand_as_number(sheet, operand);
+              value1 = operand_as_number(sheet, operand);              
+              }
+              
+            if (ttext == '-') {
                resulttype = lookup_result_type(value1.type, value2.type, typelookup.plus);
                PushOperand(resulttype, value1.value - value2.value);
                }
@@ -16543,6 +16557,7 @@ SocialCalc.Formula.DecodeRangeParts = function(sheetdata, range) {
 //        "ParameterList" is used with =CopyValue() etc, used to collect parameters of the formula, for use trigger/action formulas, 
 //        "EventTree" is used with =Button() etc, used to store trigger cell lookup table
 //        "Input" store copy of value in formdata sheet -- for input style GUI widgets - textbox/radio buttons etc - 
+//        "TimeTrigger" like button, but triggers an action at a time,  rather than on click
 //
 // To add a function, just add it to this object.
 
@@ -16711,8 +16726,8 @@ SocialCalc.Formula.StoreIoEventFormula = function(function_name, coord, operand_
   }    
         
 
-	SocialCalc.DebugLog({ ioEventTree: sheet.ioEventTree});
-	SocialCalc.DebugLog({ ioParameterList: sheet.ioParameterList});
+	//SocialCalc.DebugLog({ ioEventTree: sheet.ioEventTree});
+	//SocialCalc.DebugLog({ ioParameterList: sheet.ioParameterList});
 }   
    
 
@@ -17360,7 +17375,7 @@ CRITERIAROW:
             if (typeof criteria == "string" && criteria.length == 0) continue; // blank items are OK
             testcol = criteriafieldnums[k];
             testcr = SocialCalc.crToCoord(testcol, dbinfo.row1num + i); // cell to check
-            cell = dbinfo.sheetdata.GetAssuredCell(testcr); // get from db sheet
+            cell = dbinfo.sheetdata.GetAssuredCell(testcr); // get cell to check from dbinfo sheet
             if (!scf.TestCriteria(cell.datavalue, cell.valuetype || "b", criteria)) {
                continue CRITERIAROW; // does not meet criteria - check next row
                }
@@ -19849,6 +19864,7 @@ SocialCalc.Formula.FunctionList["IRR"] = [SocialCalc.Formula.IRRFunction, -1, "i
 # COMMAND(trigger_cell, commands)
 # COMMANDIF(trigger_cell, condition, commands) 
 # PANEL(indices_or_csv, panel1_range [, panel2_range , ...])  
+# STYLE(css)  
 #
 */
 
@@ -19900,6 +19916,7 @@ SocialCalc.Formula.IoFunctions = function(fname, operand, foperand, sheet, coord
         ,COMMAND: [4, 14]
         ,COMMANDIF: [4, 13, 14]
         ,PANEL:[15, -12] // # PANEL(indices_or_csv, panel1_range [, panel2_range , ...])  
+        ,STYLE:[6] // # STYLE(css)  
    };
    
    var i, parameter, offset, len, start, count;
@@ -20003,6 +20020,18 @@ SocialCalc.Formula.IoFunctions = function(fname, operand, foperand, sheet, coord
 
    
    switch (fname) {
+     case "STYLE":  
+       var parameters = sheet.ioParameterList[coord];
+       if(parameters) {
+         var css = SocialCalc.Formula.getStandardizedList(sheet, {value: operand_value[1], type: operand_type[1]});
+         if(css.length > 0 ) {
+           parameters.css = css[0];
+           parameters.cssParameter = (operand_type[1] == "t") ? '"'+operand_value[1]+'"' : operand_value[1];
+         }
+         result = ""; // ensure return value does not get changed by style - will add this empty string to number or string
+         resulttype = "ni"; // important - allows widgets to keep type - use: TEXTBOX("")+STYLE(css)  - must add style to widget 
+       }
+       break;
      case "SELECT":  // # SELECT(string, range [,size [,multiple]])
          var parameters = sheet.ioParameterList[coord];
          var optionSource = SocialCalc.Formula.getStandardizedList(sheet, parameters[1]);
@@ -20170,8 +20199,8 @@ SocialCalc.Formula.IoFunctions = function(fname, operand, foperand, sheet, coord
 
 
 
-SocialCalc.Formula.FunctionList["BUTTON"] = [SocialCalc.Formula.IoFunctions, 1, "label", "", "gui", "<button type='button' onclick=\"SocialCalc.TriggerIoAction.Button('<%=cell_reference%>');\"><%=formated_value%></button>" ];
-SocialCalc.Formula.FunctionList["IMAGEBUTTON"] = [SocialCalc.Formula.IoFunctions, 1, "imageurl", "", "gui", "<input type='image' src='<%=display_value%>' alt='Submit' onclick=\"SocialCalc.TriggerIoAction.Button('<%=cell_reference%>');\">" ];
+SocialCalc.Formula.FunctionList["BUTTON"] = [SocialCalc.Formula.IoFunctions, 1, "label", "", "gui", "<button type='button' onclick=\"SocialCalc.TriggerIoAction.Button('<%=cell_reference%>');\"><%=formated_value%></button>" , "ParameterList" ];
+SocialCalc.Formula.FunctionList["IMAGEBUTTON"] = [SocialCalc.Formula.IoFunctions, 1, "imageurl", "", "gui", "<input type='image' src='<%=display_value%>' alt='Submit' onclick=\"SocialCalc.TriggerIoAction.Button('<%=cell_reference%>');\">", "ParameterList"  ];
 SocialCalc.Formula.FunctionList["EMAIL"] = [SocialCalc.Formula.IoFunctions, -3, "to_range subject_range, body_range", "", "action", "<button type='button' onclick=\"SocialCalc.TriggerIoAction.Email('<%=cell_reference%>');\"><%=formated_value%></button>", "ParameterList" ];
 SocialCalc.Formula.FunctionList["EMAILIF"] = [SocialCalc.Formula.IoFunctions, -4, "condition_range, to_range subject_range, body_range", "", "action", "<button type='button' onclick=\"SocialCalc.TriggerIoAction.Email('<%=cell_reference%>');\"><%=formated_value%></button>", "ParameterList" ];
 SocialCalc.Formula.FunctionList["EMAILONEDIT"] = [SocialCalc.Formula.IoFunctions, -4, "editRange, to_range subject_range, body_range", "", "action", "<button type='button' onclick=\"SocialCalc.TriggerIoAction.Email('<%=cell_reference%>');\"><%=formated_value%></button>", "EventTree"];
@@ -20192,7 +20221,8 @@ SocialCalc.Formula.FunctionList["DELETEIF"] = [SocialCalc.Formula.IoFunctions, -
 SocialCalc.Formula.FunctionList["COMMAND"] = [SocialCalc.Formula.IoFunctions, -1, "trigger_cell, commands", "", "action", "", "EventTree"];
 SocialCalc.Formula.FunctionList["COMMANDIF"] = [SocialCalc.Formula.IoFunctions, -1, "trigger_cell, conditions, commands", "", "action", "", "EventTree"];
 
-SocialCalc.Formula.FunctionList["PANEL"] = [SocialCalc.Formula.IoFunctions, -1, "showindices_range_or_csv, panel1_range [, panel2_range , ...]", "", "action", "", "EventTree"];
+SocialCalc.Formula.FunctionList["PANEL"] = [SocialCalc.Formula.IoFunctions, -1, "showindices_range_or_csv, panel1_range [, panel2_range , ...]", "", "gui", ""];
+SocialCalc.Formula.FunctionList["STYLE"] = [SocialCalc.Formula.IoFunctions, -1, "css", "", "gui", ""];
 
 // on enter input box refresh the auto complete list
 SocialCalc.TriggerIoAction.AddAutocomplete = function(triggerCellId) {
@@ -20751,6 +20781,10 @@ SocialCalc.TriggerIoAction.updateInputWidgetFormula = function(function_name, wi
 //   else sheetCommand +=  cell.parseinfo[parseIndex].text ;
 // }
  sheetCommand += ')';
+ // add style formula if css has been added
+ if(parameters.cssParameter) {
+   sheetCommand += "+style("+  parameters.cssParameter+ ")"; 
+ }
  //SocialCalc.CmdGotFocus(cell_widget);
 
  spreadsheet.editor.EditorScheduleSheetCommands(sheetCommand,  true, false);
