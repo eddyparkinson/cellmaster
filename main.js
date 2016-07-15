@@ -25,7 +25,7 @@
       }
       : function(it){
         var encoder;
-        return HMAC_CACHE[it] || (HMAC_CACHE[it] = (encoder = require('crypto').createHmac('sha256', KEY), encoder.update(it.toString()), encoder.digest('hex')));
+        return HMAC_CACHE[it] || (HMAC_CACHE[it] = (encoder = require('crypto').createHmac('sha256', new Buffer(KEY)), encoder.update(it.toString()), encoder.digest('hex')));
       };
     ref$ = ['text/plain', 'text/html', 'text/csv', 'application/json'].map((function(it){
       return it + "; charset=utf-8";
@@ -72,11 +72,9 @@
       }
     });
     this.get({
-      '/static/socialcalc:part.js': function(){
-        var part;
-        part = this.params.part;
+      '/static/socialcalc.js': function(){
         this.response.type('application/javascript');
-        return this.response.sendfile(RealBin + "/socialcalc" + part + ".js");
+        return this.response.sendfile(RealBin + "/node_modules/socialcalc/SocialCalc.js");
       }
     });
     this.get({
@@ -529,10 +527,16 @@
         return cs = cs.concat(chunk);
       });
       return request.on('end', function(){
-        var buf, k, ref$, save;
+        var buf, iconv, k, ref$, save;
         buf = Buffer.concat(cs);
         if (request.is('text/x-socialcalc')) {
           return cb(buf.toString('utf8'));
+        }
+        if (request.is('text/x-ethercalc-csv-double-encoded')) {
+          iconv = require('iconv-lite');
+          buf = iconv.decode(buf, 'utf8');
+          buf = iconv.encode(buf, 'latin1');
+          buf = iconv.decode(buf, 'utf8');
         }
         for (k in ref$ = J.utils.to_socialcalc(J.read(buf)) || {
           '': ''
@@ -573,9 +577,6 @@
       '/_/:room': function(){
         var room, this$ = this;
         room = this.params.room;
-        if (room === 'Kaohsiung-explode-20140801') {
-          return;
-        }
         return requestToCommand(this.request, function(command){
           if (!command) {
             this$.response.type(Text);
@@ -759,7 +760,7 @@
             if (commandParameters[0].trim() === 'submitform') {
               room_data = room.indexOf('_') === -1
                 ? room + "_formdata"
-                : room.replace(/_[a-zA-Z0-9]*$/i, "_formdata");
+                : room.replace(/_[.=_a-zA-Z0-9]*$/i, "_formdata");
               console.log("test SC[" + room_data + "] submitform...");
               if (SC[room_data + ""] == null) {
                 console.log("Submitform. loading... SC[" + room_data + "]");
