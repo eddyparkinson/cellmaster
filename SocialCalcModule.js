@@ -7812,7 +7812,7 @@ SocialCalc.CreateTableEditor = function(editor, width, height) {
    }
 
    td = document.createElement("td"); // logo display: Required by CPAL License for this code!
-   if (SocialCalc._app) { // in app right align Required logo
+   if (SocialCalc._app) { // in app right align Required CPAL License logo
      td.style.background="url("+editor.imageprefix+"logo.gif) no-repeat right center";
    } else {
      td.style.background="url("+editor.imageprefix+"logo.gif) no-repeat center center";
@@ -20212,7 +20212,7 @@ SocialCalc.Formula.IoFunctions = function(fname, operand, foperand, sheet, coord
           showGridDimension(sheet,  sheet.attribs.lastrow,  sheet.rowattribs.hide, showrows, getRowIndex);
           lastShowDimension = 0;
           showGridDimension(sheet,  sheet.attribs.lastcol,  sheet.colattribs.hide, showcols, SocialCalc.rcColname );
-          // control width of html - colpanes[length].last = usermaxcol - see FitToEditTable
+          // control width of html - for mobile app - as better to use native scroll rather than SocialCalc scroll bar - colpanes[length].last = usermaxcol - see FitToEditTable
           sheet.attribs.usermaxcol = lastShowDimension;
           
           if(forceRender) {
@@ -20221,10 +20221,8 @@ SocialCalc.Formula.IoFunctions = function(fname, operand, foperand, sheet, coord
             spreadsheet.editor.context.rowpanes[0].first = 1; // reset scroll bar to first row  
             spreadsheet.editor.context.CalculateColWidthData();
             
-            //spreadsheet.editor.FitToEditTable();
             spreadsheet.width = spreadsheet.editor.context.totalwidth;
             spreadsheet.height = 2500;
-//            spreadsheet.DoOnResize();
             spreadsheet.editor.ResizeTableEditor(spreadsheet.editor.context.totalwidth,2500);  // 2500 is page height constant - fix issue with mobile device - Used constant because could not see an easy way to pre-calculate height 
           }
           
@@ -27400,7 +27398,7 @@ SocialCalc.GetSpreadsheetViewerObject = function() {
 //
 
 SocialCalc.DoOnResize = function(spreadsheet) {
-   
+
    var v;
    var views = spreadsheet.views;
 
@@ -27413,7 +27411,7 @@ SocialCalc.DoOnResize = function(spreadsheet) {
       v.style.height = (spreadsheet.height-spreadsheet.nonviewheight) + "px";
       }
 
-   if(SocialCalc._app) return; // app has fixed size - for mobile
+   if(SocialCalc._app) return; // app has no scroll bars and keep normal HTML style page scroll - for mobile
    spreadsheet.editor.ResizeTableEditor(spreadsheet.width, spreadsheet.height-spreadsheet.nonviewheight);
 
    }
