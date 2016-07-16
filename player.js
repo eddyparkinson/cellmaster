@@ -17,9 +17,7 @@
           if (requestParams['auth'] != null) {
             SocialCalc._auth = requestParams['auth'];
           }
-          if (requestParams['app'] != null) {
-            SocialCalc._app = true;
-          }
+          SocialCalc._app = true;
           if (requestParams['view'] != null) {
             SocialCalc._view = true;
           }
