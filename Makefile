@@ -20,6 +20,10 @@ ETHERCALC_FILES=\
 
 JS_FILES=\
 	app.js dotcloud.js player.js main.js sc.js db.js
+	
+ifneq ("$(wildcard static/jquery-ui.min.js)","")
+	ETHERCALC_FILES += static/jquery-ui.min.js
+endif
 
 all :: SocialCalcModule.js static/ethercalc.js
 	@sed -i "s/Updated.*/Updated $(shell date)/" manifest.appcache
