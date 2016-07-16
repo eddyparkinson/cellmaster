@@ -2494,6 +2494,8 @@ SocialCalc.ExecuteSheetCommand = function(sheet, cmd, saveundo) {
          sheet.renderneeded = true;
          sheet.changedrendervalues = true;
          sheet.widgetsClean = false; //  force widgets to repaint - update cell reference in widget HTML 
+         sheet.ioEventTree = {}; // clear cache - force widget references to recalculate  - resets trigger and action formula cache
+         sheet.ioParameterList = {};
          what = cmd.NextToken();
          rest = cmd.RestOfString();
          ParseRange();
@@ -2613,6 +2615,8 @@ SocialCalc.ExecuteSheetCommand = function(sheet, cmd, saveundo) {
          sheet.renderneeded = true;
          sheet.changedrendervalues = true;
          sheet.widgetsClean = false; // update cell reference in widget HTML - force widgets to repaint
+         sheet.ioEventTree = {}; // clear cache - force widget references to recalculate  - resets trigger and action formula cache
+         sheet.ioParameterList = {};
          what = cmd.NextToken();
          rest = cmd.RestOfString();
          lastcol = attribs.lastcol; // save old values since ParseRange sets...

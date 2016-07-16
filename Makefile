@@ -6,9 +6,10 @@ SOCIALCALC_FILES=\
 	formula1.js \
 	socialcalcpopup.js \
 	socialcalcspreadsheetcontrol.js \
-	socialcalcviewer.js
+	socialcalcviewer.js 
 
 ETHERCALC_FILES=\
+	$(SOCIALCALC_FILES) \
 	third-party/class-js/lib/Class.js \
 	third-party/wikiwyg/lib/Document/Emitter.js \
 	third-party/wikiwyg/lib/Document/Emitter/HTML.js \
@@ -17,49 +18,46 @@ ETHERCALC_FILES=\
 	static/jquery.js \
 	static/vex.combined.min.js
 
-LS_FILES=$(wildcard src/*.ls)
+JS_FILES=\
+	app.js dotcloud.js player.js main.js sc.js db.js
 
-JS_FILES=$(LS_FILES:src/%.ls=%.js)
+all :: SocialCalcModule.js static/ethercalc.js
+	@sed -i "s/Updated.*/Updated $(shell date)/" manifest.appcache
+	env PATH="$$PATH:../node_modules/LiveScript/bin" livescript -c -o . src
+	node app.js $(ETHERCALC_ARGS)
 
-UGLIFYJS_ARGS = -c -m
-ifdef DEBUG
-  UGLIFYJS_ARGS += -b
-endif
-
-run: all
-	node app.js --cors $(ETHERCALC_ARGS)
-
-vm: all
+only :: SocialCalcModule.js static/ethercalc.js
+	@sed -i "s/Updated.*/Updated $(shell date)/" manifest.appcache
+	env PATH="$$PATH:../node_modules/LiveScript/bin" livescript -c -o . src
+	@echo -e '\a'
+	@read -p "Press [Enter]"
+	
+vm :: SocialCalcModule.js
+	env PATH="$$PATH:../node_modules/LiveScript/bin" livescript -c -o . src
 	node app.js --vm $(ETHERCALC_ARGS)
 
-expire: all
+expire :: SocialCalcModule.js
+	env PATH="$$PATH:../node_modules/LiveScript/bin" livescript -c -o . src
 	node app.js --expire 10 $(ETHERCALC_ARGS)
-
-all: SocialCalcModule.js depends $(JS_FILES)
-
-$(JS_FILES): %.js: src/%.ls
-	env PATH="$$PATH:./node_modules/livescript/bin" lsc -c -o . $<
-
-manifest ::
-	perl -pi -e 's/# [A-Z].*\n/# @{[`date`]}/m' manifest.appcache
 
 ./node_modules/streamline/bin/_node :
 	npm i --dev
 
-static/multi.js :: multi/main.ls multi/styles.styl
-	webpack --optimize-minimize
+depends :: app.js static/ethercalc.js static/start.css
 
-depends: app.js static/ethercalc.js static/start.css static/multi.js
-
-SocialCalcModule.js: $(SOCIALCALC_FILES) exports.js
+SocialCalcModule.js :: $(SOCIALCALC_FILES) exports.js 
 	cat $(SOCIALCALC_FILES) exports.js > $@
+	@cp $(SOCIALCALC_FILES) /cygdrive/c/Users/eddy/Dropbox/ethercalc/
+	@cp src/*.ls /cygdrive/c/Users/eddy/Dropbox/ethercalc/src/
+	#@perl -e 'system(join(" ", "closure-compiler" => map { ("--js", $$_) } @ARGV). " > $@")' $(SOCIALCALC_FILES) exports.js
 
-static/ethercalc.js: $(ETHERCALC_FILES) SocialCalcModule.js
-	@-mkdir .git
-	@echo '// Auto-generated from "make depends"; ALL CHANGES HERE WILL BE LOST!' > $@
-	node node_modules/zappajs/node_modules/uglify-js/bin/uglifyjs $(SOCIALCALC_FILES) $(ETHERCALC_FILES) $(UGLIFYJS_ARGS) --source-map ethercalc.js.map --source-map-include-sources >> $@
-	mv ethercalc.js.map static
-
+static/ethercalc.js :: $(ETHERCALC_FILES)
+	@echo "// Auto-generated from "make depends"; all changes here will be lost. CellMaster" > $@
+	@java -jar ../closure-compiler/compiler.jar --js $(ETHERCALC_FILES) --warning_level QUIET --formatting PRETTY_PRINT >> $@
+	#@java -jar ../closure-compiler/compiler.jar --js $(ETHERCALC_FILES) --warning_level QUIET >> $@
+	#@cat $(ETHERCALC_FILES) >> $@
+	#@perl -e 'system(join(" ", "closure-compiler" => "--language_in=ES5" => map { ("--js", $$_) } @ARGV). " >> $@")' $(ETHERCALC_FILES) 
+ 
 .coffee.js:
 	coffee -c $<
 
@@ -69,5 +67,7 @@ static/ethercalc.js: $(ETHERCALC_FILES) SocialCalcModule.js
 clean ::
 	@-rm $(JS_FILES)
 
-.SUFFIXES: .js .css .sass .ls
-.PHONY: run vm expire all clean depends
+push ::
+	dotcloud push ethercalc
+
+.SUFFIXES: .js .coffee .css .sass .ls
