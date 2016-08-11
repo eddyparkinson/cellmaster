@@ -1,0 +1,2 @@
+cp $OPENSHIFT_REPO_DIR/dump.json.treesforlife $OPENSHIFT_DATA_DIR/dump.json
+
