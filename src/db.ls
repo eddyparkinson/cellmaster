@@ -71,7 +71,7 @@
         console.log "dump file locked, exit process"
         process.exit! 
     else
-      console.log "No existing dump file - #dataDir/dump.json #message"
+      console.log "No existing dump file - #dataDir/dump.json "
     Commands =
       bgsave: (cb) ->
         fs.writeFileSync do
