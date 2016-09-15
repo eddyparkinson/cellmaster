@@ -19,5 +19,5 @@ date -u >> ${OPENSHIFT_LOG_DIR}status.log
 # and your actual script starts here
 # create room if needed, then add time stamp
 curl  -H "Content-Type: application/json" -X POST http://${OPENSHIFT_APP_DNS}/_ -d '{ "room": " status", "snapshot": ""}'
-curl  -H "Content-Type: application/json" -X POST http://${OPENSHIFT_APP_DNS}/_/status -d '{"command":"set A1 text t '$(date +%Y-%m-%d_%H:%M:%S)'"}'
+curl  -H "Content-Type: application/json" -X POST http://${OPENSHIFT_APP_DNS}/_/status -d '{"command":"set A1 text t '$(TZ=Australia/Adelaide date +%Y-%m-%d_%H:%M:%S)'"}'
 
