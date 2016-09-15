@@ -60,8 +60,7 @@
     fs = require \fs
     db.DB = {}
     minimatch = require \minimatch
-    try
-      fs.accessSync "#dataDir/dump.json", fs.F_OK   #check file exists - throws exception if file is missing
+    if fs.existsSync "#dataDir/dump.json" #check file exists - throws exception if exists and read fails
       #console.log "==> Found previous JSON file"
       try      
         db.DB = JSON.parse do
@@ -71,8 +70,8 @@
       catch 
         console.log "dump file locked, exit process"
         process.exit! 
-    catch {message}
-      console.log "No existing dump file - #dataDir/dump.json #message"
+    else
+      console.log "No existing dump file - #dataDir/dump.json "
     Commands =
       bgsave: (cb) ->
         fs.writeFileSync do
