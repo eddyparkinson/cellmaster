@@ -7,7 +7,7 @@
     SocialCalc.isConnected = true
     requestParams = SocialCalc.requestParams
     SocialCalc._auth = requestParams[\auth] if requestParams[\auth]?
-    SocialCalc._app = true if requestParams[\app]?    
+    SocialCalc._app =true #force app mode, no editing allowed   
     SocialCalc._view = true if requestParams[\view]?
     #SocialCalc._view = SocialCalc._auth is \0     
     SocialCalc._room ?= window.EtherCalc?_room || window.location.hash.replace \# ''
