@@ -60,11 +60,18 @@
     fs = require \fs
     db.DB = {}
     minimatch = require \minimatch
-    try
-      db.DB = JSON.parse do
-        require \fs .readFileSync "#dataDir/dump.json" \utf8
-      console.log "==> Restored previous session from JSON file"
-      db.DB = {} if db.DB is true
+    if fs.existsSync "#dataDir/dump.json" #check file exists - throws exception if exists and read fails
+      #console.log "==> Found previous JSON file"
+      try      
+        db.DB = JSON.parse do
+          require \fs .readFileSync "#dataDir/dump.json" \utf8
+        console.log "==> Restored previous session from JSON file"
+        db.DB = {} if db.DB is true
+      catch 
+        console.log "dump file locked, exit process"
+        process.exit! 
+    else
+      console.log "No existing dump file - #dataDir/dump.json "
     Commands =
       bgsave: (cb) ->
         fs.writeFileSync do

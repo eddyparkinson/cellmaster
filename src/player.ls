@@ -10,7 +10,7 @@
     SocialCalc._app =true #force app mode, no editing allowed   
     SocialCalc._view = true if requestParams[\view]?
     #SocialCalc._view = SocialCalc._auth is \0     
-    SocialCalc._room ?= window.location.hash.replace \# ''
+    SocialCalc._room ?= window.EtherCalc?_room || window.location.hash.replace \# ''
     SocialCalc._room = "#{SocialCalc._room}".replace /^_+/ '' .replace /\?.*/ ''
 
     endpoint = $('script[src*="/socket.io/socket.io.js"]')?attr(\src)?replace(/\.?\/socket.io\/socket.io.js.*/ '')
@@ -82,7 +82,7 @@
     SocialCalc.isConnected = true
     SocialCalc.RecalcInfo.LoadSheetCache = {}
     SocialCalc.RecalcInfo.LoadSheet = (ref) ->
-      return if ref is /[^.a-zA-Z0-9]/
+      return if ref is /[^.=_a-zA-Z0-9]/
       ref.=toLowerCase!
       emit type: \ask.recalc, user: SocialCalc._username, room: ref
 
@@ -156,7 +156,7 @@
             ss.ParseSheetSave @data.snapshot.substring parts.sheet.start, parts.sheet.end
           if parts.edit
             ss.editor.LoadEditorSettings @data.snapshot.substring parts.edit.start, parts.edit.end
-            # render not needed, render is triggered by:  CreateTableEditor (empty) then RecalcTimerRoutine (sheet)
+            # render not needed, render is triggered by:  CreateTableEditor (renders empty sheet) then RecalcTimerRoutine (renders loaded sheet)
         window.addmsg? @data.chat.join(\\n), true
         cmdstr = [ line for line in @data.log
              | not /^re(calc|display)$/.test(line) ].join \\n

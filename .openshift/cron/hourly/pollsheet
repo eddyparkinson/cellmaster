@@ -1,0 +1,23 @@
+#!/bin/bash
+echo "Started"
+
+#minutes=$(($(date +'%s / 60')))
+#hours=$(($(date +'%s / 60 / 60')))
+#days=$(($(date +'%s / 60 / 60 / 24')))
+#weeks=$(($(date +'%s / 60 / 60 / 24 / 7')))
+#moons=$(($(date +'%s / 60 / 60 / 24 / 656')))
+
+# debug log
+date -u >> ${OPENSHIFT_LOG_DIR}status.log
+
+# passed since Epoch and define a frequency
+# let's say, every 5 mins
+#if [[ $(($minutes % 5)) -ne 0 ]]; then
+#    exit 0
+#fi
+
+# and your actual script starts here
+# create room if needed, then add time stamp
+curl  -H "Content-Type: application/json" -X POST http://${OPENSHIFT_APP_DNS}/_ -d '{ "room": " status", "snapshot": ""}'
+curl  -H "Content-Type: application/json" -X POST http://${OPENSHIFT_APP_DNS}/_/status -d '{"command":"set A1 text t '$(TZ=Australia/Adelaide date +%Y-%m-%d_%H:%M:%S)'"}'
+

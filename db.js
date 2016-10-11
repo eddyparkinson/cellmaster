@@ -67,7 +67,7 @@
     });
     EXPIRE = this.EXPIRE;
     db.on('error', function(err){
-      var fs, minimatch, Commands;
+      var fs, minimatch, e, Commands;
       switch (false) {
       case db.DB !== true:
         return console.log("==> Lost connection to Redis Server - attempting to reconnect...");
@@ -85,13 +85,21 @@
       fs = require('fs');
       db.DB = {};
       minimatch = require('minimatch');
-      try {
-        db.DB = JSON.parse(require('fs').readFileSync(dataDir + "/dump.json", 'utf8'));
-        console.log("==> Restored previous session from JSON file");
-        if (db.DB === true) {
-          db.DB = {};
+      if (fs.existsSync(dataDir + "/dump.json")) {
+        try {
+          db.DB = JSON.parse(require('fs').readFileSync(dataDir + "/dump.json", 'utf8'));
+          console.log("==> Restored previous session from JSON file");
+          if (db.DB === true) {
+            db.DB = {};
+          }
+        } catch (e$) {
+          e = e$;
+          console.log("dump file locked, exit process");
+          process.exit();
         }
-      } catch (e$) {}
+      } else {
+        console.log("No existing dump file - " + dataDir + "/dump.json ");
+      }
       Commands = {
         bgsave: function(cb){
           fs.writeFileSync(dataDir + "/dump.json", JSON.stringify(db.DB, void 8, 2), 'utf8');
