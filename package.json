@@ -18,6 +18,7 @@
     "optimist": "*",
     "redis": "0.12.x",
     "socialcalc": "2.x",
+    "spdy": "^3.4.4",
     "uuid-pure": "*",
     "xoauth2": "*",
     "zappajs": "0.5.x"

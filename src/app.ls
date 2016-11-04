@@ -1,13 +1,15 @@
 /*
 CC0 1.0 Universal
 
-To the extent possible under law, 唐鳳 has waived all copyright and
+To the extent possible under law, å”�é³³ has waived all copyright and
 related or neighboring rights to EtherCalc.
 
 This work is published from Taiwan.
 
 <http://creativecommons.org/publicdomain/zero/1.0>
 */
+http2 = require 'spdy'
+fs = require 'fs'
 
 slurp = -> require \fs .readFileSync it, \utf8
 argv = (try require \optimist .boolean <[ vm polling cors ]> .argv) || {}
@@ -32,11 +34,20 @@ console.log "Please connect to: #transport://#{
 
 options.io = { origin: '*' } if cors
 
-<- (require \zappajs) port, host, options
-@KEY = key
-@BASEPATH = basepath
-@POLLING = polling
-@CORS = cors
-@EXPIRE = +expire
-@EXPIRE = 0 if isNaN @EXPIRE
-@include \main
+zap = (require \zappajs).app options, ->
+  @KEY = key
+  @BASEPATH = basepath
+  @POLLING = polling
+  @CORS = cors
+  @EXPIRE = +expire
+  @EXPIRE = 0 if isNaN @EXPIRE
+  @include \main
+
+options =
+  key: fs.readFileSync './ssl/server.key'
+  cert: fs.readFileSync './ssl/server.crt'
+
+http2
+  .createServer(options, zap.app)
+  .listen port, host, =>
+  
