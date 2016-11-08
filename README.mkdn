@@ -1,4 +1,7 @@
-# EtherCalc
+# CellMaster 
+forked from ethercalc
+
+[App Editor](http://i.imgur.com/KPaDeGW.png)
 
 * Overview: http://ethercalc.net/
 * 中文版: http://ethercalc.tw/
