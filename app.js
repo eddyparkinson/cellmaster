@@ -10,7 +10,7 @@ This work is published from Taiwan.
 <http://creativecommons.org/publicdomain/zero/1.0>
 */
 (function(){
-  var http2, fs, slurp, argv, json, port, host, basepath, keyfile, certfile, key, polling, cors, expire, transport, options, zap, replace$ = ''.replace;
+  var http2, fs, slurp, argv, json, port, host, basepath, keyfile, certfile, key, polling, cors, expire, transport, options, zappa, h2options, replace$ = ''.replace;
   http2 = require('spdy');
   fs = require('fs');
   slurp = function(it){
@@ -34,8 +34,8 @@ This work is published from Taiwan.
   if (keyfile != null && certfile != null) {
     options = {
       https: {
-        key: slurp(keyfile),
-        cert: slurp(certfile)
+        key: fs.readFileSync(keyfile),
+        cert: fs.readFileSync(certfile)
       }
     };
     transport = 'https';
@@ -48,7 +48,7 @@ This work is published from Taiwan.
       origin: '*'
     };
   }
-  zap = require('zappajs').app(options, function(){
+  zappa = require('zappajs').app(options, function(){
     this.KEY = key;
     this.BASEPATH = basepath;
     this.POLLING = polling;
@@ -59,9 +59,9 @@ This work is published from Taiwan.
     }
     return this.include('main');
   });
-  options = {
-    key: fs.readFileSync('./ssl/server.key'),
-    cert: fs.readFileSync('./ssl/server.crt')
+  h2options = {
+    key: fs.readFileSync(keyfile),
+    cert: fs.readFileSync(certfile)
   };
-  http2.createServer(options, zap.app).listen(port, host);
+  http2.createServer(h2options, zappa.app).listen(port, host, function(){});
 }).call(this);

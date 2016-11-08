@@ -8,9 +8,10 @@ This work is published from Taiwan.
 
 <http://creativecommons.org/publicdomain/zero/1.0>
 */
-http2 = require 'spdy'
-fs = require 'fs'
 
+http2 = require \spdy
+fs = require \fs
+ 
 slurp = -> require \fs .readFileSync it, \utf8
 argv = (try require \optimist .boolean <[ vm polling cors ]> .argv) || {}
 json = try JSON.parse slurp \/home/dotcloud/environment.json
@@ -23,8 +24,8 @@ basepath = (argv.basepath or "") - //  /$  //
 transport = \http
 if keyfile? and certfile?
   options = https:
-    key: slurp keyfile
-    cert: slurp certfile
+    key: fs.readFileSync keyfile
+    cert: fs.readFileSync certfile
   transport = \https
 else options = {}
 
@@ -34,7 +35,7 @@ console.log "Please connect to: #transport://#{
 
 options.io = { origin: '*' } if cors
 
-zap = (require \zappajs).app options, ->
+zappa = (require \zappajs).app options, ->
   @KEY = key
   @BASEPATH = basepath
   @POLLING = polling
@@ -42,12 +43,11 @@ zap = (require \zappajs).app options, ->
   @EXPIRE = +expire
   @EXPIRE = 0 if isNaN @EXPIRE
   @include \main
-
-options =
-  key: fs.readFileSync './ssl/server.key'
-  cert: fs.readFileSync './ssl/server.crt'
+ 
+h2options =
+  key: fs.readFileSync keyfile
+  cert: fs.readFileSync certfile
 
 http2
-  .createServer(options, zap.app)
-  .listen port, host, =>
-  
+  .createServer(h2options, zappa.app)
+  .listen port, host, ->
