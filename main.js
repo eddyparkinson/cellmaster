@@ -3,7 +3,7 @@
   var join$ = [].join;
   this.include = function(){
     var J, csvParse, DB, SC, KEY, BASEPATH, EXPIRE, HMAC_CACHE, hmac, ref$, Text, Html, Csv, Json, fs, RealBin, DevMode, dataDir, sendFile, newRoom, IO, api, ExportCSVJSON, ExportCSV, ExportHTML, JTypeMap, ExportJ, ExportExcelXML, requestToCommand, requestToSave, i$, len$, route, ref1$, this$ = this;
-    this.use('json', this.app.router, this.express['static'](__dirname));
+    this.use(require('body-parser').json(), this.express['static'](__dirname));
     this.app.use('/edit', this.express['static'](__dirname));
     this.app.use('/view', this.express['static'](__dirname));
     this.app.use('/app', this.express['static'](__dirname));
