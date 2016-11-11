@@ -10,9 +10,9 @@ This work is published from Taiwan.
 <http://creativecommons.org/publicdomain/zero/1.0>
 */
 (function(){
-  var http2, fs, slurp, argv, json, port, host, basepath, keyfile, certfile, key, polling, cors, expire, transport, options, zappa, h2options, replace$ = ''.replace;
-  http2 = require('spdy');
+  var fs, http2, slurp, argv, json, port, host, basepath, keyfile, certfile, key, polling, cors, expire, options, transport, replace$ = ''.replace;
   fs = require('fs');
+  http2 = require('spdy');
   slurp = function(it){
     return require('fs').readFileSync(it, 'utf8');
   };
@@ -30,25 +30,28 @@ This work is published from Taiwan.
   host = argv.host || process.env.VCAP_APP_HOST || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0';
   basepath = replace$.call(argv.basepath || "", /\/$/, '');
   keyfile = argv.keyfile, certfile = argv.certfile, key = argv.key, polling = argv.polling, cors = argv.cors, expire = argv.expire;
+  options = {
+    host: host,
+    port: port,
+    ready: function(){
+      return console.log("Please connect to: " + transport + "://" + (host === '0.0.0.0' ? require('os').hostname() : host) + ":" + port + "/");
+    }
+  };
   transport = 'http';
   if (keyfile != null && certfile != null) {
-    options = {
-      https: {
-        key: fs.readFileSync(keyfile),
-        cert: fs.readFileSync(certfile)
-      }
+    options.https = {
+      key: fs.readFileSync(keyfile),
+      cert: fs.readFileSync(certfile)
     };
+    options.http_module = http2;
     transport = 'https';
-  } else {
-    options = {};
   }
-  console.log("Please connect to: " + transport + "://" + (host === '0.0.0.0' ? require('os').hostname() : host) + ":" + port + "/");
   if (cors) {
     options.io = {
       origin: '*'
     };
   }
-  zappa = require('zappajs').app(options, function(){
+  require('zappajs')(options, function(){
     this.KEY = key;
     this.BASEPATH = basepath;
     this.POLLING = polling;
@@ -59,9 +62,4 @@ This work is published from Taiwan.
     }
     return this.include('main');
   });
-  h2options = {
-    key: fs.readFileSync(keyfile),
-    cert: fs.readFileSync(certfile)
-  };
-  http2.createServer(h2options, zappa.app).listen(port, host, function(){});
 }).call(this);
