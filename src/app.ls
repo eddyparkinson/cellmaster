@@ -9,8 +9,8 @@ This work is published from Taiwan.
 <http://creativecommons.org/publicdomain/zero/1.0>
 */
 
-http2 = require \spdy
 fs = require \fs
+http2 = require \spdy
  
 slurp = -> require \fs .readFileSync it, \utf8
 argv = (try require \optimist .boolean <[ vm polling cors ]> .argv) || {}
@@ -21,21 +21,28 @@ basepath = (argv.basepath or "") - //  /$  //
 
 { keyfile, certfile, key, polling, cors, expire } = argv
 
+
+options = 
+  host : host
+  port : port
+  ready: ->
+    console.log "Please connect to: #transport://#{
+      if host is \0.0.0.0 then require \os .hostname! else host
+    }:#port/"
+    
 transport = \http
 if keyfile? and certfile?
-  options = https:
+  options.https = 
     key: fs.readFileSync keyfile
     cert: fs.readFileSync certfile
+  options.http_module = http2
   transport = \https
-else options = {}
 
-console.log "Please connect to: #transport://#{
-  if host is \0.0.0.0 then require \os .hostname! else host
-}:#port/"
 
-options.io = { origin: '*' } if cors
+if cors
+  options.io = { origin: '*' }  
 
-zappa = (require \zappajs).app options, ->
+(require \zappajs) options, ->
   @KEY = key
   @BASEPATH = basepath
   @POLLING = polling
@@ -43,11 +50,3 @@ zappa = (require \zappajs).app options, ->
   @EXPIRE = +expire
   @EXPIRE = 0 if isNaN @EXPIRE
   @include \main
- 
-h2options =
-  key: fs.readFileSync keyfile
-  cert: fs.readFileSync certfile
-
-http2
-  .createServer(h2options, zappa.app)
-  .listen port, host, ->

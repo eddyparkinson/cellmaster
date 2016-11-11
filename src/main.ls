@@ -1,5 +1,5 @@
 @include = ->
-  @use \json, @app.router, @express.static __dirname
+  @use (require 'body-parser').json(), @express.static __dirname
   @app.use \/edit @express.static __dirname
   @app.use \/view @express.static __dirname
   @app.use \/app @express.static __dirname
