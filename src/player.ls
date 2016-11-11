@@ -1,4 +1,4 @@
-@include = -> @client '/player/main.js': ->
+@include = -> @js '/player/main.js': do ->
   $ = window.jQuery || window.$
   return location.reload! unless $
   doPlay = ~>

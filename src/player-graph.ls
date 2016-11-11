@@ -1,4 +1,4 @@
-@include = -> @client '/player/graph.js': ->
+@include = -> @js '/player/graph.js': do ->
   $ = window.jQuery || window.$
   return location.reload! unless $
   SocialCalc = window.SocialCalc || alert 'Cannot find window.SocialCalc'
@@ -720,4 +720,4 @@
   scc.defaultRownameStyle = 'font-size:small;text-align:right;color:#' + hightLightForegoundColour + ';background-color:#' + unselectedbg + ';direction:rtl;'
   scc.defaultSelectedRownameStyle = 'font-size:small;text-align:right;color:#' + hightLightForegoundColour + ';background-color:#' + selectedbg + ';'
   scc.defaultHighlightTypeCursorStyle = 'color:#' + hightLightForegoundColour + ';backgroundColor:#' + cursorbg + ';'
-  
+
