@@ -524,7 +524,9 @@
             return "<div class=\"wiki\">" + new Document.Parser.Wikitext().parse(val, new Document.Emitter.HTML()) + "</div>";
           };
         }
-        return doPlay();
+        return window.Zappa(function(){
+          return this.ready(doPlay);
+        });
       }
     });
   };
