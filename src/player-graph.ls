@@ -1,4 +1,4 @@
-@include = -> @js '/player/graph.js': do ->
+@include = -> @js '/player/graph.js': ->
   $ = window.jQuery || window.$
   return location.reload! unless $
   SocialCalc = window.SocialCalc || alert 'Cannot find window.SocialCalc'

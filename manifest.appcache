@@ -23,7 +23,7 @@ static/multi.js
 # pad page
 static/ethercalc.js
 socket.io/socket.io.js
-zappa/zappa.js
+zappajs-client.js
 player/broadcast.js
 player/graph.js
 player/main.js

@@ -1,9 +1,12 @@
-@include = ->
-  @use (require 'body-parser').json(), @express.static __dirname
-  @app.use \/edit @express.static __dirname
-  @app.use \/view @express.static __dirname
-  @app.use \/app @express.static __dirname
+bodyParser = require \body-parser
+serveStatic = require \serve-static
 
+@include = ->
+  @use bodyParser.json()
+  @app.use \/edit serveStatic __dirname
+  @app.use \/view serveStatic __dirname
+  @app.use \/app serveStatic __dirname
+ 
   @include \dotcloud
   @include \player-broadcast
   @include \player-graph
@@ -53,6 +56,7 @@
   new-room = -> require \uuid-pure .newId 12 36 .toLowerCase!
 
   @get '/': sendFile \index.html
+  @get '/zappajs-client.js': sendFile \node_modules/zappajs-client/browser.js
   #@get '/favicon.ico': -> @response.send 404 ''
   #return site icons
   @get '/favicon.ico': sendFile \favicon.ico
@@ -530,3 +534,4 @@
       broadcast @data
     | otherwise
       broadcast @data
+  @use serveStatic __dirname

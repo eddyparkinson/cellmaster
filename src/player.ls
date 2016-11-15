@@ -1,4 +1,4 @@
-@include = -> @js '/player/main.js': do ->
+@include = -> @js '/player/main.js': ->
   $ = window.jQuery || window.$
   return location.reload! unless $
   doPlay = ~>
@@ -342,4 +342,5 @@ Check the activity stream to see the newly edited page!
       }</div>
     """
 
-  doPlay!
+  window.Zappa ->
+    @ready doPlay
