@@ -14,9 +14,10 @@ minutes=$(($(date +'%s / 60')))
 #echo "logged date"
 #echo "${OPENSHIFT_LOG_DIR}ticktock.log"
 
-# every day - log UTC time at midnight
-if [[ $(($minutes % 1440)) -eq 0 ]]; then
+# every day - log UTC time at 14:00 (Adelaide time 00:30am)
+if [[ $(($minutes % 1440)) -eq 840 ]]; then
     date -u >> ${OPENSHIFT_LOG_DIR}ticktock.log
+    gear restart --cart nodejs    
 fi
 
 # passed since Epoch and define a frequency
