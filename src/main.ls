@@ -362,7 +362,7 @@
     #command = 'submitform \r12/01/2016\rjim\rhere'
     #console.log "Command: #command"
     {log, snapshot} <~ SC._get room, IO
-    if command is /^loadclipboard\s*/
+    if not (@request.is \application/json) and command is /^loadclipboard\s*/
       row = 1
       if snapshot is /\nsheet:c:\d+:r:(\d+):/
         row += Number(RegExp.$1)
