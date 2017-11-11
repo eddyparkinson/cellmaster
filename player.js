@@ -87,7 +87,7 @@
           window.addEventListener('offline', function(){
             return showError('Disconnected from server. please check network connection and refresh.');
           });
-          x$ = (ref4$ = this$.connect(window.location.origin, options)) != null ? ref4$.io : void 8;
+          x$ = (ref4$ = this$.connect(window.location.origin(+'/', options))) != null ? ref4$.io : void 8;
           if (x$ != null) {
             x$.on('reconnect', function(){
               if (!((typeof SocialCalc != 'undefined' && SocialCalc !== null) && SocialCalc.isConnected)) {

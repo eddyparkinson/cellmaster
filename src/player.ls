@@ -55,7 +55,7 @@
     window.addEventListener \offline ->
       showError 'Disconnected from server. please check network connection and refresh.'
 
-    @connect(window.location.origin /* +':8000/' */ /* websockets port */, options)?io
+    @connect(window.location.origin +'/'  /* +':8000/' */ /* websockets port */, options)?io
       ..?on \reconnect ->
         return unless SocialCalc?isConnected
         SocialCalc.Callbacks.broadcast \ask.log
