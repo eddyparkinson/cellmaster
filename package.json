@@ -14,7 +14,7 @@
     "j": "0.4.x",
     "livescript": "1.4.x",
     "minimatch": "*",
-    "nodemailer": "*",
+    "nodemailer": "2.7.2",
     "optimist": "*",
     "redis": "0.12.x",
     "socialcalc": "2.x",
@@ -42,9 +42,10 @@
     "ethercalc": "./bin/ethercalc"
   },
   "scripts": {
-    "start": "node app.js"
+    "start": "node --harmony app.js"
   },
   "engines": {
     "node": ">= 0.8.x"
-  }
+  },
+  "main": "--harmony app.js"
 }
